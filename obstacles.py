@@ -19,3 +19,8 @@ def voidcreate(void, voidx, voidy, voidw, voidh):
     voidimg = pygame.transform.scale(void, (voidw, voidh))
     voidrect = voidimg.get_rect(topleft=(voidx, voidy))
     return (voidimg, voidrect)
+
+def spikescreate(spikes, spikesx, spikesy):
+    spikeimg = pygame.transform.scale(spikes, (64, 64))
+    spikerect = spikeimg.get_rect(topleft=(spikesx, spikesy))
+    return (spikeimg, spikerect)

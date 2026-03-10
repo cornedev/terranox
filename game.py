@@ -63,6 +63,13 @@ voids = [
     voidcreate(void, 0, 956, 10000, 64)
 ]
 
+spikes = pygame.image.load("gfx/spikes.png").convert_alpha()
+spikes = [
+    spikescreate(spikes, 1216, 508),
+    spikescreate(spikes, 1152, 508),
+    spikescreate(spikes, 1088, 508),
+]
+
 def levelreset():
     global coins, goombas, coinscore, playerlives
     playerreset()
@@ -203,6 +210,9 @@ while gamerunning:
     for lanternimg, lanternrect in lanterns:
         gamescreen.blit(lanternimg, (lanternrect.x - camerax, lanternrect.y - cameray))
 
+    for spikeimg, spikerect in spikes:
+        gamescreen.blit(spikeimg, (spikerect.x -camerax, spikerect.y - cameray))
+
     goombasalive = []
     for goomba in goombas:
         if goomba["goombaalive"]:
@@ -241,6 +251,11 @@ while gamerunning:
 
     for voidimg, voidrect in voids:
         if playerrect.colliderect(voidrect):
+            playerlives -= 1
+            levelreset()
+
+    for spikeimg, spikerect in spikes:
+        if playerrect.colliderect(spikerect):
             playerlives -= 1
             levelreset()
     
