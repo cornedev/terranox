@@ -20,9 +20,11 @@ gamefont = pygame.font.Font(None, 40)
 
 from obstacles import *
 from player import *
-from coin import *
 from audio import *
 from enemies import *
+
+from items.items import items
+item = items()
 
 musicstart()
 
@@ -35,16 +37,15 @@ worldh = 2000
 floor = pygame.image.load("gfx/floor.png").convert_alpha()
 floorsand = pygame.image.load("gfx/floorsand.png").convert_alpha()
 floorsandstone = pygame.image.load("gfx/floorsandstone.png").convert_alpha()
+floorsandblock = pygame.image.load("gfx/floorsandblock.png").convert_alpha()
 floors = [
     floorcreate(floorsand, 0, 636, 640, 64),
-    floorcreate(floorsand, 640, 636, 640, 64),
-    floorcreate(floorsand, 1280, 636, 640, 64),
-    floorcreate(floorsand, 0, 576, 640, 64),
-    floorcreate(floorsand, 640, 576, 640, 64),
-    floorcreate(floorsand, 1280, 576, 640, 64),
-    floorcreate(floorsandstone, 0, 512, 640, 64),
-    floorcreate(floorsandstone, 800, 384, 640, 64),
-    floorcreate(floorsandstone, 1280, 512, 640, 64),
+    floorcreate(floorsandstone, 0, 572, 640, 64),
+    floorcreate(floorsand, 832, 636, 640, 64),
+    floorcreate(floorsandstone, 832, 572, 640, 64),
+    floorcreate(floorsandblock, 1408, 508, 64, 64),
+    floorcreate(floorsandblock, 832, 508, 64, 64),
+    floorcreate(floorsandblock, 576, 508, 64, 64),
 ]
 
 lantern = pygame.image.load("gfx/lantern.png").convert_alpha()
@@ -54,7 +55,12 @@ lanterns = [
 
 finish = pygame.image.load("gfx/finish.png").convert_alpha()
 finishes = [
-    finishcreate(finish, 936, 256),
+    finishcreate(finish, 1936, 256),
+]
+
+void = pygame.image.load("gfx/void.png").convert_alpha()
+voids = [
+    voidcreate(void, 0, 956, 10000, 64)
 ]
 
 def levelreset():
@@ -62,14 +68,12 @@ def levelreset():
     playerreset()
 
     coins = [
-        {"rect": coincreate(coinframes[0], 300, 300)[1], "coinframeindex": 0},
-        {"rect": coincreate(coinframes[0], 400, 300)[1], "coinframeindex": 0},
-        {"rect": coincreate(coinframes[0], 500, 300)[1], "coinframeindex": 0},
-        {"rect": coincreate(coinframes[0], 600, 300)[1], "coinframeindex": 0},
+        {"rect": item.coincreate(item.coinframes[0], 300, 300)[1], "coinframeindex": 0},
+        {"rect": item.coincreate(item.coinframes[0], 400, 300)[1], "coinframeindex": 0},
+        {"rect": item.coincreate(item.coinframes[0], 500, 300)[1], "coinframeindex": 0},
+        {"rect": item.coincreate(item.coinframes[0], 600, 300)[1], "coinframeindex": 0},
     ]
     coinscore = 0
-
-    playerlives = 3
 
     goombas = [
         {"rect": goombacreate(goombaframes[0], 1000, 100), "goombaframeindex": 0, "goombaalive": True, "goombakilledtimer": 15},
@@ -183,11 +187,11 @@ while gamerunning:
     coins = coinsnew
 
     for coin in coins:
-        coin["coinframeindex"] += coinanimspeed
-        if coin["coinframeindex"] >= len(coinframes):
+        coin["coinframeindex"] += item.coinanimspeed
+        if coin["coinframeindex"] >= len(item.coinframes):
             coin["coinframeindex"] = 0
 
-        coincurrentframe = coinframes[int(coin["coinframeindex"])]
+        coincurrentframe = item.coinframes[int(coin["coinframeindex"])]
         gamescreen.blit(coincurrentframe, (coin["rect"].x - camerax, coin["rect"].y - cameray))
 
     for finishimg, finishrect in finishes:
@@ -232,6 +236,12 @@ while gamerunning:
 
     for finishimg, finishrect in finishes:
         if playerrect.colliderect(finishrect):
+            playerlives = 3
+            levelreset()
+
+    for voidimg, voidrect in voids:
+        if playerrect.colliderect(voidrect):
+            playerlives -= 1
             levelreset()
     
     pygame.display.flip()

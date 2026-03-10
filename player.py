@@ -1,6 +1,4 @@
 import pygame
-from coin import *
-from enemies import *
 
 playerframew = 32
 playerframeh = 64
