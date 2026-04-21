@@ -34,7 +34,6 @@ cameray = 0
 worldw = 4000
 worldh = 2000
 
-floor = pygame.image.load("gfx/floor.png").convert_alpha()
 floorsand = pygame.image.load("gfx/floorsand.png").convert_alpha()
 floorsandstone = pygame.image.load("gfx/floorsandstone.png").convert_alpha()
 floorsandblock = pygame.image.load("gfx/floorsandblock.png").convert_alpha()
@@ -60,7 +59,7 @@ floors = [
     floorcreate(floorsandblock, 2240, 188, 64, 64),
     floorcreate(floorsandblock, 2304, 636, 64, 64),
     #floor 4
-    floorcreate(floorsandstone, 2560, 380, 640, 64),
+    floorcreate(floorsandstone, 2688, 380, 640, 64),
 ]
 
 lantern = pygame.image.load("gfx/lantern.png").convert_alpha()
@@ -85,11 +84,10 @@ spikes = [
 
 windcharges = [
     item.windchargecreate(0, 508),
-    item.windchargecreate(2304, 572),
 ]
 
 jumppads = [
-    {"rect": item.jumppadcreate(item.jumppadframes[0], 128, 500)[1], "jumppadframeindex": 0}
+    {"rect": item.jumppadcreate(item.jumppadframes[0], 2304, 572)[1], "jumppadframeindex": 0}
 ]
 
 def levelreset():
@@ -115,8 +113,10 @@ blue = (135, 206, 235)
 
 ground = True
 gamerunning = True
+gamepaused = False
 windchargehenk = True
 
+gamepausetimer = 0
 coinscore = 0
 playerlives = 3
 while gamerunning:
@@ -132,6 +132,14 @@ while gamerunning:
                     pygame.mixer.music.unpause()
                     musicrunning = True
    
+    if gamepaused:
+        gamepausetimer -= 1
+        pygame.display.flip()
+        gameclock.tick(gamefps)
+        if gamepausetimer <= 0:
+            gamepaused = False
+        continue
+
     gamedx = 0
     gameinput = pygame.key.get_pressed()
     if gameinput[pygame.K_a]:
@@ -204,6 +212,14 @@ while gamerunning:
         for item.windchargeimg, item.windchargerect in windcharges:
             gamescreen.blit(item.windchargeimg, (item.windchargerect.x -camerax, item.windchargerect.y - cameray))
 
+    for jumppad in jumppads:
+        jumppad["jumppadframeindex"] += item.jumppadanimspeed
+        if jumppad["jumppadframeindex"] >= len(item.jumppadframes):
+            jumppad["jumppadframeindex"] = 0
+
+        jumppadcurrentframe = item.jumppadframes[int(jumppad["jumppadframeindex"])]
+        gamescreen.blit(jumppadcurrentframe, (jumppad["rect"].x - camerax, jumppad["rect"].y - cameray))
+    
     gamescreen.blit(player, (playerrect.x - camerax, playerrect.y - cameray))
 
     gamecoincounter = gamefont.render(f"coins: {coinscore}", True, white)
@@ -233,14 +249,6 @@ while gamerunning:
         coincurrentframe = item.coinframes[int(coin["coinframeindex"])]
         gamescreen.blit(coincurrentframe, (coin["rect"].x - camerax, coin["rect"].y - cameray))
 
-    for jumppad in jumppads:
-        jumppad["jumppadframeindex"] += item.jumppadanimspeed
-        if jumppad["jumppadframeindex"] >= len(item.jumppadframes):
-            jumppad["jumppadframeindex"] = 0
-
-        jumppadcurrentframe = item.jumppadframes[int(jumppad["jumppadframeindex"])]
-        gamescreen.blit(jumppadcurrentframe, (jumppad["rect"].x - camerax, jumppad["rect"].y - cameray))
-
     for finishimg, finishrect in finishes:
         gamescreen.blit(finishimg, (finishrect.x - camerax, finishrect.y - cameray))
 
@@ -266,6 +274,8 @@ while gamerunning:
                 goomba["goombakilledtimer"] = 15
             elif goomba["goombaalive"]:
                 playerlives -= 1
+                gamepaused = True
+                gamepausetimer = 60
                 playerreset()
 
         if goomba["goombaalive"]:
@@ -307,7 +317,8 @@ while gamerunning:
     for jumppad in jumppads:
         jumppadrect = jumppad["rect"]
         if playerrect.colliderect(jumppadrect):
-            if playervely > 0 and (playerrect.bottom - jumppadrect.top) < 20:
+            if playervely > 0 and playerrect.bottom - playervely <= jumppadrect.top:
+                playerrect.bottom = jumppadrect.top
                 playervely = -40
     
     pygame.display.flip()
