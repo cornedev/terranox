@@ -5,7 +5,7 @@ class jumppad:
         self.jumppadframew = 64
         self.jumppadframeh = 64
         self.jumppadframecount = 2
-        self.jumppadanimspeed = 0.1
+        self.jumppadanimspeed = 0.03
 
         self.jumppad = pygame.image.load("gfx/jumppadspritesheet_idle.png").convert_alpha()
 
