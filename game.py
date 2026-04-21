@@ -39,13 +39,28 @@ floorsand = pygame.image.load("gfx/floorsand.png").convert_alpha()
 floorsandstone = pygame.image.load("gfx/floorsandstone.png").convert_alpha()
 floorsandblock = pygame.image.load("gfx/floorsandblock.png").convert_alpha()
 floors = [
+    #floor 1
     floorcreate(floorsand, 0, 636, 640, 64),
     floorcreate(floorsandstone, 0, 572, 640, 64),
+    floorcreate(floorsandblock, 576, 508, 64, 64),
+    #floor 2
     floorcreate(floorsand, 832, 636, 640, 64),
     floorcreate(floorsandstone, 832, 572, 640, 64),
-    floorcreate(floorsandblock, 1408, 508, 64, 64),
     floorcreate(floorsandblock, 832, 508, 64, 64),
-    floorcreate(floorsandblock, 576, 508, 64, 64),
+    floorcreate(floorsandblock, 1408, 508, 64, 64),
+    #floor 3
+    floorcreate(floorsandstone, 1664, 444, 640, 64),
+    floorcreate(floorsandblock, 1600, 444, 64, 64),
+    #floor 3 stairs
+    floorcreate(floorsandblock, 1920, 380, 64, 64),
+    floorcreate(floorsandblock, 1984, 316, 64, 64),
+    floorcreate(floorsandblock, 2048, 252, 64, 64),
+    floorcreate(floorsandblock, 2112, 188, 64, 64),
+    floorcreate(floorsandblock, 2176, 188, 64, 64),
+    floorcreate(floorsandblock, 2240, 188, 64, 64),
+    floorcreate(floorsandblock, 2304, 636, 64, 64),
+    #floor 4
+    floorcreate(floorsandstone, 2560, 380, 640, 64),
 ]
 
 lantern = pygame.image.load("gfx/lantern.png").convert_alpha()
@@ -55,19 +70,26 @@ lanterns = [
 
 finish = pygame.image.load("gfx/finish.png").convert_alpha()
 finishes = [
-    finishcreate(finish, 1936, 256),
+    finishcreate(finish, 2128, 256),
 ]
 
 void = pygame.image.load("gfx/void.png").convert_alpha()
 voids = [
-    voidcreate(void, 0, 956, 10000, 64)
+    voidcreate(void, 0, 1212, 10000, 64)
 ]
 
 spikes = pygame.image.load("gfx/spikes.png").convert_alpha()
 spikes = [
-    spikescreate(spikes, 1216, 508),
-    spikescreate(spikes, 1152, 508),
-    spikescreate(spikes, 1088, 508),
+    #spikescreate(spikes, 1216, 508),
+]
+
+windcharges = [
+    item.windchargecreate(0, 508),
+    item.windchargecreate(2304, 572),
+]
+
+jumppads = [
+    {"rect": item.jumppadcreate(item.jumppadframes[0], 128, 500)[1], "jumppadframeindex": 0}
 ]
 
 def levelreset():
@@ -93,6 +115,7 @@ blue = (135, 206, 235)
 
 ground = True
 gamerunning = True
+windchargehenk = True
 
 coinscore = 0
 playerlives = 3
@@ -115,6 +138,10 @@ while gamerunning:
         playerright = False
     if gameinput[pygame.K_d]:
         playerright = True
+    if gameinput[pygame.K_LSHIFT]:
+        playerspeed = 10
+    if not gameinput[pygame.K_LSHIFT]:
+        playerspeed = 5
 
     if not (gameinput[pygame.K_s] and ground):
         if gameinput[pygame.K_a]:
@@ -172,6 +199,11 @@ while gamerunning:
     camerax = max(0, min(camerax, worldw - gamew))
 
     gamescreen.fill(blue)
+
+    if windchargehenk == True:
+        for item.windchargeimg, item.windchargerect in windcharges:
+            gamescreen.blit(item.windchargeimg, (item.windchargerect.x -camerax, item.windchargerect.y - cameray))
+
     gamescreen.blit(player, (playerrect.x - camerax, playerrect.y - cameray))
 
     gamecoincounter = gamefont.render(f"coins: {coinscore}", True, white)
@@ -201,6 +233,14 @@ while gamerunning:
         coincurrentframe = item.coinframes[int(coin["coinframeindex"])]
         gamescreen.blit(coincurrentframe, (coin["rect"].x - camerax, coin["rect"].y - cameray))
 
+    for jumppad in jumppads:
+        jumppad["jumppadframeindex"] += item.jumppadanimspeed
+        if jumppad["jumppadframeindex"] >= len(item.jumppadframes):
+            jumppad["jumppadframeindex"] = 0
+
+        jumppadcurrentframe = item.jumppadframes[int(jumppad["jumppadframeindex"])]
+        gamescreen.blit(jumppadcurrentframe, (jumppad["rect"].x - camerax, jumppad["rect"].y - cameray))
+
     for finishimg, finishrect in finishes:
         gamescreen.blit(finishimg, (finishrect.x - camerax, finishrect.y - cameray))
 
@@ -220,7 +260,7 @@ while gamerunning:
 
         if playerrect.colliderect(goomba["rect"]["goombarect"]):
             if playervely > 0 and (playerrect.bottom - goomba["rect"]["goombarect"].top) < 20:
-                playervely = -10
+                playervely = -15
                 goombakilledsfx()
                 goomba["goombaalive"] = False
                 goomba["goombakilledtimer"] = 15
@@ -258,6 +298,17 @@ while gamerunning:
         if playerrect.colliderect(spikerect):
             playerlives -= 1
             levelreset()
+
+    for windchargeimg, windchargerect in windcharges:
+        if gameinput[pygame.K_e] and playerrect.colliderect(windchargerect):
+            playervely = -30
+            windchargehenk = False
+
+    for jumppad in jumppads:
+        jumppadrect = jumppad["rect"]
+        if playerrect.colliderect(jumppadrect):
+            if playervely > 0 and (playerrect.bottom - jumppadrect.top) < 20:
+                playervely = -40
     
     pygame.display.flip()
     gameclock.tick(gamefps)
